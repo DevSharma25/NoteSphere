@@ -1,159 +1,89 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { FaStickyNote, FaArrowRight } from "react-icons/fa";
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext'; // Adjust path as needed
 
 export default function Home() {
-  const navigate = useNavigate();
-  const [isHovered, setIsHovered] = useState(false);
-  const [notesFlying, setNotesFlying] = useState([]);
+  const { currentTheme } = useTheme();
 
-  // Create flying notes animation
-  useEffect(() => {
-    const colors = ["text-yellow-300", "text-pink-300", "text-blue-300", "text-green-300", "text-purple-300"];
-    const interval = setInterval(() => {
-      if (notesFlying.length < 8) { // Limit number of notes
-        setNotesFlying(prev => [
-          ...prev,
-          {
-            id: Date.now(),
-            color: colors[Math.floor(Math.random() * colors.length)],
-            left: Math.random() * 100,
-            delay: Math.random() * 2,
-            size: Math.random() * 20 + 10
-          }
-        ]);
-      }
-    }, 800);
-
-    return () => clearInterval(interval);
-  }, [notesFlying.length]);
-
-  // Remove notes after animation
-  useEffect(() => {
-    if (notesFlying.length > 8) {
-      setNotesFlying(prev => prev.slice(1));
+  // Get theme-aware styles
+  const getThemeStyles = () => ({
+    bg: currentTheme?.bg || 'bg-gradient-to-br from-[#1a649d] to-purple-50',
+    text: {
+      primary: currentTheme?.text || 'text-white',
+      secondary: currentTheme?.raw?.text ? `text-[${currentTheme.raw.text}]` : 'text-white/90'
+    },
+    button: {
+      primary: currentTheme?.raw?.button 
+        ? `bg-[${currentTheme.raw.button}]` 
+        : 'bg-gradient-to-r from-[#6a11cb] to-[#2575fc]',
+      secondary: currentTheme?.raw?.text 
+        ? `bg-[${currentTheme.raw.text}] text-[${currentTheme.raw.button}]`
+        : 'bg-white text-[#1a649d]'
     }
-  }, [notesFlying]);
+  });
+
+  const themeStyles = getThemeStyles();
 
   return (
-    <div className="relative min-h-screen flex justify-center items-center bg-gradient-to-br from-black to-orange-950 overflow-hidden mt-2 mb-2 rounded-2xl">
-      {/* Animated background notes */}
-      {notesFlying.map(note => (
-        <motion.div
-          key={note.id}
-          initial={{ 
-            y: -50,
-            x: `${note.left}vw`,
-            opacity: 0,
-            rotate: Math.random() * 60 - 30
-          }}
-          animate={{ 
-            y: "100vh",
-            opacity: [0, 1, 0],
-            rotate: note.rotate + 180
-          }}
-          transition={{ 
-            duration: 8,
-            delay: note.delay,
-            ease: "linear"
-          }}
-          onAnimationComplete={() => setNotesFlying(prev => prev.filter(n => n.id !== note.id))}
-          className={`absolute text-${note.color} text-${Math.round(note.size)}xl`}
-          style={{ left: `${note.left}%` }}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`min-h-screen flex flex-col items-center justify-center p-6 transition-colors duration-300 ${themeStyles.bg}`}
+    >
+      <motion.div
+        initial={{ y: -50 }}
+        animate={{ y: 0 }}
+        className="text-center max-w-2xl"
+      >
+        <motion.h1 
+          className={`text-5xl font-bold mb-6 ${themeStyles.text.primary}`}
+          whileHover={{ scale: 1.05 }}
         >
-          <FaStickyNote />
-        </motion.div>
-      ))}
+          Welcome to NoteSphere
+        </motion.h1>
+        
+        <motion.p 
+          className={`text-xl mb-12 ${themeStyles.text.secondary}`}
+          whileHover={{ scale: 1.02 }}
+        >
+          Your colorful space for creative notes and ideas
+        </motion.p>
 
-      <div className="text-center space-y-8 z-10 px-4">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <h1 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-blue-400 mb-2">
-            NoteSphere
-          </h1>
-          <p className="text-xl text-gray-300">
-            Your thoughts, beautifully organized
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <h2 className="text-2xl font-semibold text-green-100 mb-6">
-            Wanna see your notes???...
-          </h2>
-          
-          <motion.button
-            onClick={() => navigate("/notes")}
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
+        <div className="flex flex-wrap justify-center gap-6">
+          <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="relative overflow-hidden px-8 py-4 rounded-xl
-            text-white font-bold bg-gradient-to-r from-blue-500
-            to-purple-600 shadow-2xl transition-all duration-300
-            hover:shadow-lg hover:from-blue-600 hover:to-purple-700"
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              I have your Notes
-              <motion.span
-                animate={{ x: isHovered ? 5 : 0 }}
-                transition={{ type: "spring", stiffness: 500 }}
-              >
-                <FaArrowRight />
-              </motion.span>
-            </span>
-            <motion.span
-              className="absolute inset-0 bg-white opacity-0 hover:opacity-10 transition-opacity"
-            />
-          </motion.button>
-        </motion.div>
+            <Link
+              to="/create"
+              className={`inline-block px-8 py-4 text-xl font-medium rounded-xl shadow-xl ${themeStyles.button.primary} text-white`}
+            >
+              ✨ Create New Note
+            </Link>
+          </motion.div>
+          
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Link
+              to="/notes"
+              className={`inline-block px-8 py-4 text-xl font-medium rounded-xl shadow-xl ${themeStyles.button.secondary}`}
+            >
+              📚 View All Notes
+            </Link>
+          </motion.div>
+        </div>
 
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 1 }}
-          className="text-gray-400 mt-8 text-sm"
+          className={`mt-16 ${themeStyles.text.secondary}`}
+          whileHover={{ scale: 1.01 }}
         >
-          <p>Your notes will be remembered</p>
+          <p className="mb-2">Start creating beautiful notes today!</p>
+          <div className="text-4xl">👇</div>
         </motion.div>
-      </div>
-
-      {/* Floating particles */}
-      {Array.from({ length: 15 }).map((_, i) => (
-        <motion.div
-          key={i}
-          initial={{
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-            opacity: 0
-          }}
-          animate={{
-            y: [0, Math.random() * 50 - 25],
-            opacity: [0, 0.3, 0],
-            x: [0, Math.random() * 50 - 25]
-          }}
-          transition={{
-            duration: Math.random() * 10 + 10,
-            repeat: Infinity,
-            repeatType: "reverse",
-            delay: Math.random() * 5
-          }}
-          className={`absolute rounded-full w-1 h-1 ${
-            ["bg-blue-400", "bg-purple-400", "bg-green-400"][i % 3]
-          }`}
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`
-          }}
-        />
-      ))}
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
